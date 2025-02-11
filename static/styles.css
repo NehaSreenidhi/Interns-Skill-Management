@@ -1,0 +1,14 @@
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Arial', sans-serif;
+  }
+  
+  .navbar-brand img {
+    border-radius: 50%;
+  }
+  
+  .description {
+    margin-top: 20px;
+  }
+  

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg" style="background-color: #702963;">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white" href="#">Hi, {{ name }}!</a>
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/logout">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <h2>Search Results for "{{ query }}"</h2>
+
+        <h3>Atlas Search Results:</h3>
+        <ul>
+        {% for result in text_results %}
+            <li>{{ result.name }} ({{ result.email }}) - Skills: 
+                {% for skill in result.skills %}
+                    {{ skill.skill_name }} ({{ skill.skill_level }}),
+                {% endfor %}
+            </li>
+        {% endfor %}
+        </ul>
+
+        <!-- <h3>FAISS Search Results:</h3>
+        <ul>
+        {% for result in faiss_results %}
+            <li>{{ result.name }} ({{ result.email }}) - Skill: {{ result.skill }}</li>
+        {% endfor %}
+        </ul> -->
+
+        <a href="/search_interns" class="btn btn-secondary mt-3">Back to Search</a>
+    </div>
+</body>
+</html>

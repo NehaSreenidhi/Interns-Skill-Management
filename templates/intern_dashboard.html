@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intern Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .navbar {
+            padding: 10px 20px;
+        }
+        .navbar-brand, .navbar-nav .nav-link {
+            color: white;
+        }
+        .skills-section {
+            margin-top: 20px;
+        }
+        .skills-section h3 {
+            color: #702963;
+        }
+        #skillsPieChart {
+        max-width: 500px;
+        width: 40%;
+        height: 500px; 
+        margin: 20px auto;
+        display: block;
+        }
+        body {
+            padding-bottom: 50px; 
+        }
+    </style>
+    <style>
+        .skill-container {
+            margin: 15px 0;
+            padding: 5px;
+        }
+        .skill-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .progress-bar-container {
+            position: relative;
+            width: 70%;
+            background: #eee;
+            border-radius: 10px;
+            padding: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .progress-bar {
+            height: 10px;
+            border-radius: 10px;
+            transition: width 1.5s ease-in-out;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .progress-bar[data-level="Beginner"] {
+            background: linear-gradient(90deg, red, #ff6666);
+            box-shadow: 0px 0px 10px rgba(255, 0, 0, 0.8);
+        }
+        .progress-bar[data-level="Intermediate"] {
+            background: linear-gradient(90deg, blue, #6699ff);
+            box-shadow: 0px 0px 10px rgba(0, 0, 255, 0.8);
+        }
+        .progress-bar[data-level="Advanced"] {
+            background: linear-gradient(90deg, green, #66cc66);
+            box-shadow: 0px 0px 10px rgba(0, 255, 0, 0.8);
+        }
+        .progress-dot {
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg" style="background-color: #702963;">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white" href="#">Hi, {{ name }}!</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                            <li>
+                                <a class="dropdown-item" href="#add_skills" onclick="openAddSkills()">Add Skill</a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="#modify_skills" onclick="openModifySkills()">Modify Skills</a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text" href="/profile/{{ email }}">My Profile</a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text" href="/profile_settings">Settings</a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="/logout">Logout</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MySkills Section -->
+    <div class="container skills-section">
+        <h3>My Skills</h3>
+        <div id="skillsList"></div>
+    </div>
+
+    <!-- Add Skills Modal -->
+    <div class="modal fade" id="addSkillsModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addSkillsModalLabel">Add Skills</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addSkillsForm" action="/add_skills" method="POST">
+                        <div class="mb-3">
+                            <label for="skillName" class="form-label">Skill Name</label>
+                            <input type="text" class="form-control" id="skillName" name="skillName" placeholder="Enter skill name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="skillLevel" class="form-label">Skill Level</label>
+                            <select class="form-select" id="skillLevel" name="skillLevel" required>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn w-100" style="background-color: #702963; color: white;">Add Skill</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modify Skills Modal -->
+    <div class="modal fade" id="modifySkillsModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modifySkillsModalLabel">Modify Skills</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="modifySkillsForm" action="/modify_skills" method="POST">
+                        <div class="mb-3">
+                            <label for="existingSkill" class="form-label">Select Skill to Modify</label>
+                            <select class="form-select" id="existingSkill" name="existingSkill" required>
+                                <!-- Skill options will be populated here dynamically -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newSkillLevel" class="form-label">New Skill Level</label>
+                            <select class="form-select" id="newSkillLevel" name="newSkillLevel" required>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn w-100" style="background-color: #702963; color: white;">Modify Skill</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Fetch and Display Skills in Pie Chart
+        function loadMySkills() {
+        fetch('/get_skills')
+            .then(response => response.json())
+            .then(data => {
+                let container = document.getElementById('skillsList');
+                container.innerHTML = '';
+
+                data.skills.forEach(skill => {
+                    let percentage = skill.weight * 33; // Scaling weight to 100% max
+                    let colorClass = skill.skill_level === "Advanced" ? "green" 
+                                    : skill.skill_level === "Intermediate" ? "blue" 
+                                    : "red";
+
+                    let dotsHTML = "";
+                    for (let i = 25; i <= percentage; i += 25) {
+                        dotsHTML += `<div class="progress-dot" style="left: ${i}%"></div>`;
+                    }
+
+                    container.innerHTML += `
+                        <div class="skill-container">
+                            <div class="skill-name">${skill.skill_name} (${skill.skill_level})</div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" data-level="${skill.skill_level}" style="width: ${percentage}%;">
+                                    ${dotsHTML}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching skills:', error);
+            });
+        }
+
+        window.onload = loadMySkills;
+
+
+        // Open Add Skills Modal
+        function openAddSkills() {
+            const modal = new bootstrap.Modal(document.getElementById('addSkillsModal'));
+            modal.show();
+        }
+        function openModifySkills() {
+            const modal = new bootstrap.Modal(document.getElementById('modifySkillsModal'));
+            modal.show();
+
+            // Fetch skills to populate the dropdown
+            fetch('/get_skills')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch skills.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const skills = data.skills;
+                    const select = document.getElementById('existingSkill');
+
+                    // Clear previous options
+                    select.innerHTML = '';
+
+                    // Populate the select dropdown with current skills
+                    skills.forEach(skill => {
+                        const option = document.createElement('option');
+                        option.value = skill.skill_name;
+                        option.textContent = `${skill.skill_name} (${skill.skill_level})`;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching skills:', error);
+                    alert('Failed to load skills. Please try again later.');
+                });
+        }
+        // Load skills when the page loads
+        window.onload = loadMySkills;
+    </script>
+</body>
+</html>

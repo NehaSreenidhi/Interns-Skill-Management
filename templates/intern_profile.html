@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intern Profile - Activity Heatmap</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .navbar {
+            padding: 10px 20px;
+            background-color: #702963;
+        }
+        .navbar-brand, .navbar-nav .nav-link {
+            color: white;
+        }
+        .skills-section {
+            margin-top: 20px;
+        }
+        .skills-section h3 {
+            color: #702963;
+        }
+        #skillsPieChart {
+        max-width: 500px;
+        width: 40%;
+        height: 500px; 
+        margin: 20px auto;
+        display: block;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            padding-bottom: 50px; 
+        }
+        .heatmap-container {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 20px;
+        }
+        .month-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .month-label {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr); /* 7 columns for weekdays */
+            gap: 3px;
+        }
+        .day {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+            position: relative;
+            background-color: #eeeeee;
+        }
+        .day:hover::after {
+            content: attr(data-date);
+            position: absolute;
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 3px 5px;
+            font-size: 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        .low-activity { background-color: #95ebaa; }
+        .high-activity { background-color: #0ba17e; }
+
+        /* table{
+            padding: 50px;
+        } */
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg" style="background-color: #702963;">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white" href="#">Intern Profile - {{ intern.name }}</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                            <li>
+                                {% if user_type == "Intern" %}
+                                    <a class="dropdown-item text" href="/intern_dashboard">Home</a>
+                                {% elif user_type == "Mentor" %}
+                                    <a class="dropdown-item text" href="/mentor_dashboard">Home</a>
+                                {% endif %}
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="/logout">Logout</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            
+        </div>
+    </nav>
+   
+    <table style="width: 50%; border-collapse: collapse; padding-top: 35px;">
+        <tr>
+            <td style="padding-left: 35px; color: brown;"><h6>Email:</h6></td>
+            <td style="padding: 10px;">
+                <a href="mailto:{{ curr_intern.email }}" style="text-decoration: none; color: inherit;">
+                    <i class="bi bi-envelope"></i> {{ curr_intern.email }}
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding-left: 35px; color: brown;"><h6>LinkedIn:</h6></td>
+            <td style="padding: 10px;">
+                <a href="{{ curr_intern.linkedin }}" target="_blank" style="text-decoration: none; color: rgb(21, 151, 244);">
+                    <i class="bi bi-linkedin"></i> LinkedIn Profile
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding-left: 35px; color: brown;"><h6>Github:</h6>
+            </td>
+            <td style="padding: 10px;">
+                <a href="{{ curr_intern.github }}" target="_blank" style="text-decoration: none; color: inherit;">
+                    <i class="bi bi-github"></i> GitHub Profile
+                </a>
+            </td>
+        </tr>
+    </table>
+    
+    <!-- Heatmap Section -->
+    <h6 style="color: brown; padding-left: 35px;">Activity heatmap</h6>
+    <div id="heatmap" class="heatmap-container"></div>
+    <br>
+    <!-- MySkills Section -->
+    <h6 style="color: brown; padding-left: 35px;">Skills</h6>
+    <div class="container skills-section">
+        <canvas id="skillsPieChart"></canvas>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function generateHeatmap() {
+            const container = document.getElementById('heatmap');
+            const activityData = JSON.parse('{{ heatmap | tojson | safe }}');
+            const currentYear = new Date().getFullYear(); // Get the current year
+    
+            // Loop through each month
+            for (let month = 0; month < 12; month++) {
+                let firstDay = new Date(currentYear, month, 1);
+                let lastDay = new Date(currentYear, month + 1, 0);
+                let startDay = firstDay.getDay(); // Weekday of 1st (0=Sun, 6=Sat)
+                let totalDays = lastDay.getDate();
+    
+                let monthDiv = document.createElement("div");
+                monthDiv.classList.add("month-container");
+    
+                // Month label (e.g., Jan, Feb, etc.)
+                let labelDiv = document.createElement("div");
+                labelDiv.classList.add("month-label");
+                labelDiv.textContent = firstDay.toLocaleString('default', { month: 'short' });
+                monthDiv.appendChild(labelDiv);
+    
+                // Grid container for the month's days
+                let gridDiv = document.createElement("div");
+                gridDiv.classList.add("grid-container");
+    
+                // Add empty cells before the 1st day
+                for (let i = 0; i < startDay; i++) {
+                    let emptyDiv = document.createElement("div");
+                    emptyDiv.style.visibility = "hidden"; // Empty days before the first day
+                    gridDiv.appendChild(emptyDiv);
+                }
+    
+                // Add actual days with activity levels
+                for (let day = 1; day <= totalDays; day++) {
+                    let dateStr = `${currentYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    let dayDiv = document.createElement("div");
+                    dayDiv.classList.add("day");
+    
+                    // Check activity data and assign classes for high/low activity
+                    if (activityData[dateStr]) {
+                        dayDiv.classList.add(activityData[dateStr] === "high" ? "high-activity" : "low-activity");
+                    }
+    
+                    dayDiv.setAttribute("data-date", dateStr);
+                    gridDiv.appendChild(dayDiv);
+                }
+    
+                monthDiv.appendChild(gridDiv);
+                container.appendChild(monthDiv);
+            }
+        }
+
+        // Fetch and Display Skills in Pie Chart
+        function loadMySkills() {
+            fetch('/get_skills/{{ intern.email }}')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch skills.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const skills = data.skills;
+
+                    // Prepare data for the pie chart
+                    const labels = skills.map(skill => `${skill.skill_name} (${skill.skill_level})`);
+                    const weights = skills.map(skill => skill.weight);
+                    const colors = skills.map(skill => {
+                        if (skill.skill_level === "Advanced") return "#702963";  // Purple for Advanced
+                        if (skill.skill_level === "Intermediate") return "#FFAAAA"; // Light red for Intermediate
+                        return "#87CEEB"; // Sky Blue for Beginner
+                    });
+
+                    // Render the pie chart
+                    const ctx = document.getElementById('skillsPieChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: weights,
+                                backgroundColor: colors,
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching skills:', error);
+                    alert('Failed to load skills. Please try again later.');
+                });
+        }
+        generateHeatmap();
+        window.onload = loadMySkills;
+    </script>
+</body>
+</html>

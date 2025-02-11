@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mentor Dashboard</title>
+    <link 
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link 
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+    .navbar {
+        padding: 10px 20px;
+    }
+    .navbar-brand, .navbar-nav .nav-link {
+        color: white;
+    }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg" style="background-color: #702963;">
+        <div class="container-fluid">
+            <a class="navbar-brand text-white" href="#">Hi, {{ name }}!</a> 
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a 
+                          class="nav-link dropdown-toggle" 
+                          href="#" 
+                          id="profileDropdown" 
+                          role="button" 
+                          data-bs-toggle="dropdown" 
+                          aria-expanded="false">
+                        <i class="bi bi-person"></i> 
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                            <li>
+                                <a class="dropdown-item" href="/search_interns">Search Interns</a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="/logout">Logout</a>
+                            </li>
+                            
+
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="container mt-5">
+        <h2>Interns List</h2>
+        <div class="row">
+            {% for intern in interns_list %}
+            <div class="col-md-4">
+                <div class="card mb-4" style="width: 20rem;">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ intern.name }}</h5>
+                        <p class="card-text"><strong>Email:</strong> {{ intern.email }}</p>
+                        <a href="/profile/{{ intern.email }}" class="btn" style="background-color: bisque; color: black;" >Go to Profile</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
