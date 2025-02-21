@@ -94,20 +94,47 @@ def login():
         if user_type == 'Intern':
             user = mycol.find_one({"email": email})
             if user and bcrypt.checkpw(password.encode('utf-8'), user['password']):
-                session['email'] = email  # Store email in session
-                session['user_type'] = user_type  # Store user type in session
+                session['email'] = email  
+                session['user_type'] = user_type  
+                flash('Login successful', 'success')
                 return redirect(url_for('intern_dashboard'))  
 
         elif user_type == 'Mentor':
             mentor = mentCol.find_one({"email": email})
             if mentor and password == mentor['password']:
-                session['email'] = email  # Store email in session
-                session['user_type'] = 'Mentor'  # Store user type in session
+                session['email'] = email  
+                session['user_type'] = 'Mentor'  
+                flash('Login successful', 'success')
                 return redirect(url_for('mentor_dashboard'))  
 
         flash('Invalid credentials. Please try again.', 'danger')
         return redirect(url_for('login')) 
     return render_template('login.html')  
+
+@app.route('/reset_password', methods=["GET", "POST"])
+def reset_password():
+    if request.method == "POST":
+        email = request.form["email"].strip()
+        password = request.form["pwd"].strip()
+        confirm_password = request.form["confirm_pwd"].strip()
+
+        user = mycol.find_one({"email": email})
+        if not user:
+            flash("Email not found!", "danger")
+            return redirect(url_for("reset_password"))
+
+        if password != confirm_password:
+            flash("Passwords do not match!", "danger")
+            return redirect(url_for("reset_password"))
+
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        mycol.update_one({"email": email}, {"$set": {"password": hashed_password}})
+        
+        flash("Password reset successfully!", "success")
+        return redirect(url_for("login")) 
+
+    return render_template("reset_password.html")
+
 
 @app.route('/intern_dashboard')
 def intern_dashboard():
@@ -128,7 +155,6 @@ def add_skills():
     if "email" not in session or session["user_type"] != "Intern":
         return redirect("/login")
 
-    # Fetching the skill details from the form
     skill_name = request.form["skillName"]
     skill_level = request.form["skillLevel"]
     email = session["email"]
@@ -148,7 +174,7 @@ def add_skills():
         return redirect("/intern_dashboard")
     
     # Creating embedding for the new skill name
-    skill_embedding = model.encode([skill_name])[0]  # Encoding the skill name
+    skill_embedding = model.encode([skill_name])[0]  # Encoding - skill name
 
     # Adding the new skill to the list
     updated_skills.append({"skill_name": skill_name, "skill_level": skill_level})
@@ -158,7 +184,7 @@ def add_skills():
     activity_log = intern.get("activity", {})
     activity_log[today] = "add"
 
-    # Updating both the skills and the activity log
+    # Updating both the skills and the activity log in db
     try:
         mycol.update_one(
             {"email": email}, 
@@ -205,7 +231,7 @@ def get_skills():
             "skill_level": skill_level,
             "weight": weight
         })
-
+    
     # Sort by weight (Advanced > Intermediate > Beginner)
     pie_chart_data = sorted(pie_chart_data, key=lambda x: -x["weight"])
     # Returning the formatted data for the frontend
@@ -339,10 +365,6 @@ def search_interns():
 
             # Perform FAISS search
             D, I = index.search(query_vector, k=min(3, index.ntotal))
-            print("FAISS Search Results - Distances:", D)
-            print("FAISS Search Results - Indices:", I)
-
-
             seen_emails = set()  # Prevent duplicates
             for idx, distance in zip(I[0], D[0]):  # Iteration over results
                 if 0 <= idx < len(interns_metadata):  # Ensure it's a valid & relevant match
@@ -360,8 +382,6 @@ def search_interns():
                             seen_emails.add(intern_email)  # Mark as added
                 else:
                     print(f"Filtered out: Index {idx}, Distance {distance}")
-        print(search_results)
-
     return render_template("search_interns.html", name=name, search_results=search_results)
 
 
@@ -391,7 +411,7 @@ def profile_settings():
         }
         mycol.update_one({"email": user_email}, {"$set": user_details}, upsert=True)
         return redirect("/intern_dashboard")
-    return render_template("profile_settings.html", name=name)
+    return render_template("profile_settings.html", name=name, email = user_email)
 
 @app.route("/logout")
 def logout():

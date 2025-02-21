@@ -12,7 +12,7 @@
 </head>
 <body>
   <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg" style="background-color: #702963;">
+  <nav class="navbar navbar-expand-lg" style="background: linear-gradient(90deg,#003366, #7c9ec3 )">
     <div class="container-fluid">
       
       <a class="navbar-brand text-white" href="#">
@@ -49,16 +49,42 @@
         <div class="description">
           <p class="fs-5 text-muted">
             Welcome to the <strong>Intern Skill Management System</strong>! This platform helps interns 
-            track their learning progress, update skills, and get tailored learning recommendations. 
-            Managers can efficiently assign tasks based on skills and project requirements.
+            track their learning progress visually through activity heatmaps, update and modify their skills. 
+            Managers can efficiently search for interns based on their skills so as to assign particular tasks inorder to save time.
           </p>
         </div>
       </div>
     </div>
   </main>
-  
+  <!-- Toast Container -->
+  <div class="toast-container position-fixed top-0 end-0 p-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="toast align-items-center text-white bg-{{ 'danger' if category == 'danger' else 'success' }} border-0"
+            role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="d-flex">
+            <div class="toast-body">
+                {{ message }}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+</div>
   <script 
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js">
+  </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var toastElList = [].slice.call(document.querySelectorAll(".toast"));
+      var toastList = toastElList.map(function (toastEl) {
+        var toast = new bootstrap.Toast(toastEl);
+        toast.show();
+      });
+    });
   </script>
 </body>
 </html>

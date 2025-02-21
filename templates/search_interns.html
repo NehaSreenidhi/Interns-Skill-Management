@@ -10,6 +10,9 @@
         /* Navbar Styling */
         .navbar {
             padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         .navbar-brand, .navbar-nav .nav-link {
             color: white;
@@ -25,7 +28,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            color: #702963;
+            color: linear-gradient(90deg,#003366, #7c9ec3 )
         }
         .search-box {
             width: 50%;
@@ -59,7 +62,7 @@
             width: 300px;
         }
         .intern-card h5 {
-            color: #702963;
+            color: linear-gradient(90deg,#003366, #7c9ec3 )
         }
         .skills-list {
             font-size: 0.9rem;
@@ -80,7 +83,7 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg" style="background-color: #702963;">
+    <nav class="navbar navbar-expand-lg" style="background: linear-gradient(90deg,#003366, #7c9ec3 )">
         <div class="container-fluid">
             <a class="navbar-brand text-white" href="#">Hi, {{ name }}!</a>
             <div class="collapse navbar-collapse">
@@ -103,7 +106,7 @@
     <div class="search-container">
         <form class="input-group search-box" method="POST" action="/search_interns" id="search-form">
             <input type="text" class="form-control" name="searchQuery" placeholder="Search for interns by skills, name, etc..." required>
-            <button class="btn btn-search" type="submit" style="background-color: #702963; color: white;">
+            <button class="btn btn-search" type="submit" style="background-color: #003366; color: white;">
                 <i class="bi bi-search"></i>
             </button>
         </form>
@@ -116,7 +119,7 @@
                 {% for intern in search_results %}
                     <div class="col-md-4">
                         <div class="intern-card">
-                            <h5>{{ intern.name }}</h5>
+                            <h5 >{{ intern.name }}</h5>
                             <p>Email: {{ intern.email }}</p>
                             <div class="skills-list">
                                 <strong>Skills:</strong>
@@ -134,7 +137,24 @@
             <h5>No results found for your search.</h5>
         {% endif %}
     </div>
-
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="toast align-items-center text-white bg-{{ 'danger' if category == 'danger' else 'success' }} border-0"
+                role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+                <div class="d-flex">
+                <div class="toast-body">
+                    {{ message }}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
@@ -145,5 +165,14 @@
             document.querySelector(".search-box").classList.add("submitted");
         });
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          var toastElList = [].slice.call(document.querySelectorAll(".toast"));
+          var toastList = toastElList.map(function (toastEl) {
+            var toast = new bootstrap.Toast(toastEl);
+            toast.show();
+          });
+        });
+      </script>
 </body>
 </html>
