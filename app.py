@@ -32,7 +32,8 @@ interns_metadata = []  # [(email, skill_name)] mapping
 def populate_faiss():
     global interns_metadata
     interns_metadata = []  # Resetting metadata
-
+    index.reset()
+    
     interns = mycol.find()
     embeddings = []
 
@@ -54,7 +55,6 @@ def populate_faiss():
         embeddings = np.array(embeddings).astype('float32')
         index.add(embeddings)  # Adding to FAISS index
 
-populate_faiss()
 
 @app.route("/")
 def home():
@@ -342,6 +342,7 @@ def intern_profile(email):
 
 @app.route('/search_interns', methods=["GET", "POST"])
 def search_interns():
+    populate_faiss()
     if "email" not in session:  
         return redirect("/login")
 
